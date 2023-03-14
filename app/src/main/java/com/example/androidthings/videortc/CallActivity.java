@@ -56,7 +56,10 @@ import java.util.List;
 public class CallActivity extends Activity implements AppRTCClient.SignalingEvents,
         PeerConnectionClient.PeerConnectionEvents {
     private static final String TAG = "CallActivity";
-    private static final String APPRTC_URL = "https://appr.tc";
+    private static final String APPRTC_URL = "http://192.168.0.243";
+    private static final String APPRTC_PORT = "8080";
+    private static final String ROOM_SERVER_PORT = "8089";
+    private static final boolean ROOM_SERVER_USE_TLS = false;
     private static final String UPPER_ALPHA_DIGITS = "ACEFGHJKLMNPQRUVWXY123456789";
 
     // Peer connection statistics callback period in ms.
@@ -169,7 +172,13 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
 
     // Join video call with randomly generated roomId
     private void connectVideoCall(String roomId) {
-        Uri roomUri = Uri.parse(APPRTC_URL);
+        Uri roomUri = Uri.parse(APPRTC_URL + ":" + APPRTC_PORT);
+        String hostnamePart = APPRTC_URL.split("//")[1];
+        String roomUriParam = "wshpp=" + hostnamePart + ":" + ROOM_SERVER_PORT;
+        if(!ROOM_SERVER_USE_TLS) {
+            roomUriParam += "&wstls=false&it=p2p&tt=tcp&ts=";
+        }
+        Log.d(TAG, "Param: " + roomUriParam);
 
         int videoWidth = 0;
         int videoHeight = 0;
@@ -206,7 +215,7 @@ public class CallActivity extends Activity implements AppRTCClient.SignalingEven
                         roomUri.toString(),
                         roomId,
                         false,
-                        null);
+                        roomUriParam);
 
         peerConnectionClient.createPeerConnectionFactory(
                 getApplicationContext(), peerConnectionParameters, CallActivity.this);
